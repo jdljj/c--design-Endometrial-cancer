@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 
 //https://www.jb51.net/article/177025.htm
 // \u0022双引号 \s{1,}多个空格 \S+任意非空格 [^\n]一切非换行符 [\s\t\n]+多个空格或换行
+// @"(?<=<div>)[\s\S]*?(?=</div>)" 提取两个div中的内容
 
 namespace test
 {
@@ -35,36 +36,37 @@ namespace test
             MatchCollection matches2 = Regex.Matches(html, pattern2);
             for (int i = 0; i < 10; i++)
             {
-                Console.WriteLine(i + 1 + "：");
+                Console.WriteLine(i);
+                String filename = "files/" + matches[i].Groups[1] + ".txt";
+                StreamWriter sw = new StreamWriter(filename)
+                {
+                    AutoFlush = true
+                };
                 String url = "https://pubmed.ncbi.nlm.nih.gov/" + matches[i].Groups[1] +"/";
-                Console.WriteLine("url={0}", url);
+                sw.WriteLine("url=" + url);
                 String title = matches[i].Groups[2].ToString();
                 title = title.Replace("<b>", "");
                 title = title.Replace("</b>", "");
-                Console.WriteLine("title={0}", title);
-                Console.WriteLine("from:{0}", matches2[i].Groups[1]);
-                Console.WriteLine("time={0}", matches2[i].Groups[2]);
+                sw.WriteLine("title=" + title);
+                sw.WriteLine("from:" + matches2[i].Groups[1]);
+                sw.WriteLine("title=" + matches2[i].Groups[2]);
                 String abs_html = HttpGet(url, "");
-                GetAbstract(abs_html);
-                Console.WriteLine();
+                String abstr = GetAbstract(abs_html);
+                sw.Write("abstract: " + abstr);
             }
         }
 
-        static void GetAbstract(string html)
+        static String GetAbstract(string html)
         {
-            //string pattern = @"<div class=\u0022abstract-content selected\u0022\n\s{1,}id=\u0022enc-abstract\u0022>[\s\t\n]+<p>[\s\t\n]+([^\n]+)";
-            //MatchCollection matches = Regex.Matches(html, pattern);
-            //Console.WriteLine(matches[0].Groups[1]);
-            
-            //以上代码可以爬出大部分abstract，但是在有粗体的页面无效
-            string pattern = @"<div class=\u0022abstract-content selected\u0022\n\s{1,}id=\u0022enc-abstract\u0022>*</div>";
+            string pattern = @"(?<=<div class=\u0022abstract-content selected\u0022\n\s{1,}id=\u0022enc-abstract\u0022>)[\s\S]*?(?=</div>)";
             Regex regex = new Regex(pattern);
             Match match = regex.Match(html);
-            Console.WriteLine(match.Groups.Count);
-            Console.WriteLine("{0}",match.Groups[0]);
-            
-            //以上代码暂时无效
-            
+            string result = match.Groups[0].ToString();
+            result = result.Replace("\n", "");
+            result = result.Replace("<p>", "");
+            result = result.Replace("</p>", "");
+            result = result.Replace("  ", "");
+            return result;
         }
 
         static void Main(string[] args)
