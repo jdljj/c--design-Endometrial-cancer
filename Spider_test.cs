@@ -49,7 +49,7 @@ namespace test
                 title = title.Replace("</b>", "");
                 sw.WriteLine("title=" + title);
                 sw.WriteLine("from:" + matches2[i].Groups[1]);
-                sw.WriteLine("title=" + matches2[i].Groups[2]);
+                sw.WriteLine("time=" + matches2[i].Groups[2]);
                 String abs_html = HttpGet(url, "");
                 String abstr = GetAbstract(abs_html);
                 sw.Write("abstract: " + abstr);
