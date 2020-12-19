@@ -26,7 +26,7 @@ namespace test
             return retString;
         }
 
-        public static void GetInfomation(string html)
+        public static void GetInfomation(string html, int size, string year)
         {
             string pattern = @"<a\n\s{1,}class=\u0022docsum-title\u0022\n\s{1,}href=\u0022/(\d+)/\u0022\n\s{1,}ref=\u0022\S+\u0022\n\s{1,}data-ga-category=\u0022result_click\u0022";
             pattern += @"\s{1,}data-ga-action=\u0022\S+\u0022\n\s{1,}data-ga-label=\u0022\S+\u0022\n\s{1,}data-full-article-url=\u0022\S+\u0022\n\s{1,}data-article-id=\u0022\d+\u0022>\n";
@@ -34,15 +34,20 @@ namespace test
             MatchCollection matches = Regex.Matches(html, pattern);
             string pattern2 = @"<span class=\u0022docsum-journal-citation full-journal-citation\u0022>([^.]+). ([^;]+);";
             MatchCollection matches2 = Regex.Matches(html, pattern2);
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < size; i++)
             {
+                if (matches[i] == null)
+                {
+                    break;
+                }
+
                 Console.WriteLine(i);
-                String filename = "files/" + matches[i].Groups[1] + ".txt";
+                String filename = "files/" + year + "/" + matches[i].Groups[1] + ".txt";
                 StreamWriter sw = new StreamWriter(filename)
                 {
                     AutoFlush = true
                 };
-                String url = "https://pubmed.ncbi.nlm.nih.gov/" + matches[i].Groups[1] +"/";
+                String url = "https://pubmed.ncbi.nlm.nih.gov/" + matches[i].Groups[1] + "/";
                 sw.WriteLine("url=" + url);
                 String title = matches[i].Groups[2].ToString();
                 title = title.Replace("<b>", "");
@@ -65,14 +70,18 @@ namespace test
             result = result.Replace("\n", "");
             result = result.Replace("<p>", "");
             result = result.Replace("</p>", "");
+            result = result.Replace("<strong class=\"sub-title\">", "");
+            result = result.Replace("</strong>", "");
             result = result.Replace("  ", "");
             return result;
         }
 
         static void Main(string[] args)
         {
-            String info = HttpGet("https://pubmed.ncbi.nlm.nih.gov/?term=endometrial+cancer&size=10", "");
-            GetInfomation(info);
+            string year = "2020";
+            string page = "11";
+            String info = HttpGet("https://pubmed.ncbi.nlm.nih.gov/?term=endometrial%20cancer&filter=years." + year + "-" + year + "&size=200&page=" + page, "");
+            GetInfomation(info, 200, year);
         }
     }
 }
